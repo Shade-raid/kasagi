@@ -312,11 +312,18 @@ export default function KasagiGame() {
             </button>
           </div>
 
-          <div className="text-sm text-gray-500">
-            {language === 'tr' 
-              ? 'Seçimleriniz hikayenizi şekillendirir'
-              : 'Your choices shape your story'
-            }
+          <div className="text-sm text-gray-500 space-y-2">
+            <div>
+              {language === 'tr' 
+                ? 'Seçimleriniz hikayenizi şekillendirir'
+                : 'Your choices shape your story'
+              }
+            </div>
+            <div className="text-xs text-gray-600 flex items-center justify-center space-x-2">
+              <span>Made by</span>
+              <span className="font-semibold text-amber-500">Shade</span>
+              <span>✨</span>
+            </div>
           </div>
         </div>
       </div>
