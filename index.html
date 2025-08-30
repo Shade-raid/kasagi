@@ -1,0 +1,508 @@
+import React, { useEffect, useState, useRef } from "react";
+
+// Kaşağı — Enhanced Interactive Fiction Game
+export default function KasagiGame() {
+  const STORY = {
+    start: {
+      id: "start",
+      title: { en: "Kaşağı", tr: "Kaşağı" },
+      text: {
+        en: `You are a boy on your family's farm. Mornings smell of hay and horse sweat. Your brother Hasan is older, quiet, and loved by your father. Today you will feed the horse and the currycomb — the kaşağı — is old and brittle.`,
+        tr: `Ailenin çiftliğinde bir çocuksun. Sabahlar saman ve at teri kokar. Kardeşin Hasan daha büyük, sessiz ve baban tarafından çok sevilir. Bugün atı besleyeceksin ve kaşağı eski ve kırılgan.`
+      },
+      choices: [
+        { id: "play", text: { en: "Play with Hasan in the yard", tr: "Hasan ile avluda oyna" }, next: "stableApproach", guilt: 0 },
+        { id: "sneak", text: { en: "Sneak to the stable alone", tr: "Sakince ahıra git" }, next: "stableAlone", guilt: 0 }
+      ],
+    },
+    stableApproach: {
+      id: "stableApproach",
+      title: { en: "The Stable", tr: "Ahır" },
+      text: {
+        en: `You and Hasan take turns brushing the mare. Hasan hums a little tune. You fumble the kaşağı — and it snaps with a sharp crack like someone breaking a promise.`,
+        tr: `Sen ve Hasan atı sırayla fırçalarsınız. Hasan hafifçe mırıldanır. Kaşağıyı yanlışlıkla kırarsın — ve keskin bir çatırdama sesi çıkar, sanki bir söz bozulmuş gibi.`
+      },
+      choices: [
+        { id: "hidePiecesA", text: { en: "Hide the bits in the straw", tr: "Parçaları samanın içine sakla" }, next: "discovery", guilt: 0 },
+        { id: "callHasanA", text: { en: "Call Hasan to help", tr: "Hasan'ı yardıma çağır" }, next: "discoveryHasan", guilt: 0 }
+      ],
+    },
+    stableAlone: {
+      id: "stableAlone",
+      title: { en: "Alone in the Stable", tr: "Ahırda Yalnız" },
+      text: {
+        en: `You work alone. The kaşağı breaks suddenly under your hand. No one heard it — or maybe someone did.`,
+        tr: `Yalnız çalışıyorsun. Kaşağı aniden elinde kırılıyor. Kimse duymadı — ya da belki duyan oldu.`
+      },
+      choices: [
+        { id: "hidePiecesB", text: { en: "Hide the pieces in the straw", tr: "Parçaları samanın içine sakla" }, next: "discovery", guilt: 0 },
+        { id: "callHasanB", text: { en: "Call Hasan to help", tr: "Hasan'ı yardıma çağır" }, next: "discoveryHasan", guilt: 0 }
+      ],
+    },
+    discovery: {
+      id: "discovery",
+      title: { en: "Discovery", tr: "Keşif" },
+      text: {
+        en: `Your father finds the broken kaşağı near the stalls. He is angry; the horse is important and the tool is expensive. He looks at you and then at Hasan.`,
+        tr: `Baban kaşağı parçalarını ahırda bulur. Kızgındır; at önemli ve alet pahalıdır. Önce sana sonra Hasan'a bakar.`
+      },
+      choices: [
+        { id: "confess", text: { en: "Confess the truth", tr: "Gerçeği itiraf et" }, next: "punishLight", guilt: 0 },
+        { id: "blame", text: { en: "Blame Hasan", tr: "Hasan'ı suçla" }, next: "hasanPunished", guilt: 30 },
+        { id: "silent", text: { en: "Stay silent", tr: "Sessiz kal" }, next: "suspicion", guilt: 10 }
+      ],
+    },
+    discoveryHasan: {
+      id: "discoveryHasan",
+      title: { en: "Discovery (Hasan Nearby)", tr: "Keşif (Hasan Yanında)" },
+      text: {
+        en: `Hasan sees the broken kaşağı. Your father narrows his eyes.`,
+        tr: `Hasan kaşağı parçalarını görür. Baban gözlerini kısar.`
+      },
+      choices: [
+        { id: "confess2", text: { en: "Confess with Hasan there", tr: "Hasan varken itiraf et" }, next: "punishLight", guilt: 0 },
+        { id: "blame2", text: { en: "Imply Hasan did it", tr: "Hasan yaptı gibi göster" }, next: "hasanPunished", guilt: 40 },
+        { id: "silent2", text: { en: "Stay silent and hope", tr: "Sessiz kal ve umut et" }, next: "suspicion", guilt: 15 }
+      ],
+    },
+    punishLight: {
+      id: "punishLight",
+      title: { en: "Punishment", tr: "Ceza" },
+      text: {
+        en: `You are scolded and made to apologize. Hasan is spared.`,
+        tr: `Azarlanıyorsun ve özür dilemen gerekiyor. Hasan ceza almaz.`
+      },
+      choices: [{ id: "continue1", text: { en: "Continue", tr: "Devam" }, next: "endingConfess", guilt: -10 }]
+    },
+    suspicion: {
+      id: "suspicion",
+      title: { en: "Suspicion", tr: "Şüphe" },
+      text: {
+        en: `Your father cannot prove anything. The house feels heavier with unspoken truths.`,
+        tr: `Baban hiçbir şey kanıtlayamaz. Ev, söylenmeyen gerçeklerle ağırlaşmış gibi hissedilir.`
+      },
+      choices: [{ id: "continue2", text: { en: "Continue", tr: "Devam" }, next: "endingGuilt", guilt: 5 }]
+    },
+    hasanPunished: {
+      id: "hasanPunished",
+      title: { en: "Hasan Punished", tr: "Hasan Cezalandırıldı" },
+      text: {
+        en: `Hasan is punished. You feel a strange weight in your chest.`,
+        tr: `Hasan cezalandırılır. Göğsünde garip bir ağırlık hissedersin.`
+      },
+      choices: [{ id: "continue3", text: { en: "Continue", tr: "Devam" }, next: "endingGuilt", guilt: 0 }]
+    },
+    endingConfess: {
+      id: "endingConfess",
+      title: { en: "Honesty", tr: "Dürüstlük" },
+      text: {
+        en: `You confessed. You were punished, but Hasan lived. A lesson about truth and courage remains.`,
+        tr: `İtiraf ettin. Ceza aldın ama Hasan sağ kaldı. Gerçek ve cesaret hakkında bir ders kaldı.`
+      },
+      choices: []
+    },
+    endingGuilt: {
+      id: "endingGuilt",
+      title: { en: "Weight of Guilt", tr: "Suçluluk Yükü" },
+      text: {
+        en: `You kept the secret. Guilt lingers, and the house feels colder.`,
+        tr: `Sırrı sakladın. Suçluluk sürüyor ve ev daha soğuk hissediliyor.`
+      },
+      choices: []
+    }
+  };
+
+  const [gameState, setGameState] = useState('splash'); // splash, menu, game
+  const [currentNode, setCurrentNode] = useState(null);
+  const [guilt, setGuilt] = useState(0);
+  const [history, setHistory] = useState(["start"]);
+  const [language, setLanguage] = useState('en');
+  const [glitchTick, setGlitchTick] = useState(0);
+  const [splashComplete, setSplashComplete] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
+  const glitchRef = useRef(null);
+
+  useEffect(() => {
+    // Splash screen timing
+    if (gameState === 'splash') {
+      const timer1 = setTimeout(() => setSplashComplete(true), 2000);
+      const timer2 = setTimeout(() => setFadeIn(true), 2200);
+      const timer3 = setTimeout(() => setGameState('menu'), 3500);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
+    }
+  }, [gameState]);
+
+  useEffect(() => {
+    if (guilt >= 20 && !glitchRef.current) {
+      glitchRef.current = setInterval(() => setGlitchTick(t => t + 1), 160);
+    }
+    if (guilt < 20 && glitchRef.current) {
+      clearInterval(glitchRef.current);
+      glitchRef.current = null;
+    }
+    return () => glitchRef.current && clearInterval(glitchRef.current);
+  }, [guilt]);
+
+  function startNewGame() {
+    setCurrentNode(STORY.start);
+    setGuilt(0);
+    setHistory(["start"]);
+    setGameState('game');
+  }
+
+  function continueGame() {
+    try {
+      const saved = JSON.parse(localStorage.getItem("kasagi_save_v2") || '{}');
+      if (saved.nodeId && STORY[saved.nodeId]) {
+        setCurrentNode(STORY[saved.nodeId]);
+        setGuilt(saved.guilt || 0);
+        setHistory(saved.history || ["start"]);
+        setLanguage(saved.language || 'en');
+        setGameState('game');
+        return true;
+      }
+    } catch (e) {
+      // Handle error silently
+    }
+    return false;
+  }
+
+  function backToMenu() {
+    setGameState('menu');
+    setCurrentNode(null);
+  }
+
+  function choose(choice) {
+    const nextNode = STORY[choice.next];
+    if (!nextNode) return;
+    if (choice.guilt) setGuilt(g => Math.min(100, Math.max(0, g + choice.guilt)));
+    setHistory(h => [...h, choice.next]);
+    setCurrentNode(nextNode);
+  }
+
+  function renderGlitched(text) {
+    if (guilt < 20) return text;
+    const rng = seededRandom(glitchTick + guilt);
+    return text.split('').map(ch => (ch === '\n' ? '\n' : rng() < 0.45 ? randomNoiseChar(rng) : ch)).join('');
+  }
+
+  function randomNoiseChar(rng) {
+    const chars = '@#%&*<>/\\=+~'.split('');
+    return chars[Math.floor(rng() * chars.length)];
+  }
+
+  function seededRandom(seed) {
+    let s = seed % 2147483647; if (s <= 0) s += 2147483646;
+    return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  }
+
+  function saveGame() {
+    if (typeof(Storage) !== "undefined" && currentNode) {
+      const saveData = { nodeId: currentNode.id, guilt, history, language };
+      localStorage.setItem("kasagi_save_v2", JSON.stringify(saveData));
+      toast(language === 'tr' ? "Oyun kaydedildi" : "Game saved");
+    }
+  }
+
+  function toast(msg) {
+    const el = document.createElement("div");
+    el.textContent = msg;
+    el.className = "fixed top-6 right-6 bg-black bg-opacity-90 text-white px-6 py-3 rounded-xl shadow-2xl opacity-95 z-50 font-medium animate-pulse";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+
+  // Splash Screen
+  if (gameState === 'splash') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center overflow-hidden relative">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+          <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+          <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-2000"></div>
+        </div>
+        
+        <div className="text-center z-10">
+          <div className={`transition-all duration-1000 ${splashComplete ? 'scale-110 opacity-100' : 'scale-95 opacity-80'}`}>
+            <h1 className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 mb-6 tracking-wide">
+              KAŞAĞI
+            </h1>
+            <div className="text-xl text-gray-300 font-light tracking-widest">
+              INTERACTIVE FICTION
+            </div>
+          </div>
+          
+          {splashComplete && (
+            <div className={`mt-8 transition-opacity duration-500 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="w-16 h-1 bg-gradient-to-r from-transparent via-white to-transparent mx-auto animate-pulse"></div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Main Menu
+  if (gameState === 'menu') {
+    const hasSavedGame = (() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem("kasagi_save_v2") || '{}');
+        return saved.nodeId && STORY[saved.nodeId];
+      } catch {
+        return false;
+      }
+    })();
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center relative overflow-hidden">
+        {/* Subtle background animation */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-amber-900/20 via-transparent to-red-900/20 animate-pulse"></div>
+        </div>
+        
+        <div className="relative z-10 text-center max-w-2xl mx-auto px-8">
+          <div className="mb-12">
+            <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 mb-4 tracking-tight">
+              KAŞAĞI
+            </h1>
+            <p className="text-xl text-gray-400 font-light max-w-lg mx-auto leading-relaxed">
+              {language === 'tr' 
+                ? 'Vicdan ve seçimlerin hikayesi. Kırık bir alet, iki kardeş ve çiftlik hayatının zorlu gerçekleri.'
+                : 'A story of conscience and choice. A broken tool, two brothers, and the harsh realities of farm life.'
+              }
+            </p>
+          </div>
+
+          <div className="space-y-4 mb-12">
+            <button
+              onClick={startNewGame}
+              className="group relative w-full max-w-sm mx-auto block bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xl font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <span className="relative">
+                {language === 'tr' ? 'YENİ OYUN' : 'NEW GAME'}
+              </span>
+            </button>
+
+            {hasSavedGame && (
+              <button
+                onClick={continueGame}
+                className="group relative w-full max-w-sm mx-auto block bg-gradient-to-r from-blue-700 to-purple-700 hover:from-blue-600 hover:to-purple-600 text-white text-xl font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                <span className="relative">
+                  {language === 'tr' ? 'DEVAM ET' : 'CONTINUE'}
+                </span>
+              </button>
+            )}
+
+            <button
+              onClick={() => setLanguage(l => l === 'en' ? 'tr' : 'en')}
+              className="group relative w-full max-w-sm mx-auto block bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white text-lg font-medium py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <span className="relative flex items-center justify-center">
+                <span className="mr-2">🌐</span>
+                {language === 'tr' ? 'ENGLISH' : 'TÜRKÇE'}
+              </span>
+            </button>
+          </div>
+
+          <div className="text-sm text-gray-500">
+            {language === 'tr' 
+              ? 'Seçimleriniz hikayenizi şekillendirir'
+              : 'Your choices shape your story'
+            }
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Game Screen
+  if (!currentNode) return null;
+
+  const isEnding = currentNode.choices.length === 0;
+  const guiltIntensity = Math.min(guilt / 100, 1);
+
+  return (
+    <div className={`min-h-screen transition-all duration-1000 relative overflow-hidden ${
+      guilt > 60 ? 'bg-gradient-to-br from-red-950 via-black to-red-950' :
+      guilt > 30 ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900' :
+      guilt > 10 ? 'bg-gradient-to-br from-gray-800 via-slate-800 to-gray-800' :
+      'bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100'
+    }`}>
+      
+      {/* Dynamic background effects */}
+      {guilt > 20 && (
+        <div className="absolute inset-0 opacity-30">
+          <div 
+            className="absolute inset-0 bg-red-900" 
+            style={{ opacity: guiltIntensity * 0.3 }}
+          ></div>
+          {guilt > 40 && (
+            <div className="absolute inset-0 animate-pulse bg-black opacity-10"></div>
+          )}
+        </div>
+      )}
+
+      <div className="relative z-10 container mx-auto px-6 py-8 max-w-4xl">
+        {/* Header Bar */}
+        <div className="flex items-center justify-between mb-8 p-4 rounded-2xl backdrop-blur-sm bg-white/10">
+          <button
+            onClick={backToMenu}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 ${
+              guilt > 20 
+                ? 'bg-red-900/50 text-white hover:bg-red-800/50' 
+                : 'bg-amber-200/80 text-amber-900 hover:bg-amber-300/80'
+            }`}
+          >
+            <span>←</span>
+            <span>{language === 'tr' ? 'Ana Menü' : 'Main Menu'}</span>
+          </button>
+          
+          <div className="flex items-center space-x-6">
+            {/* Guilt Visualization */}
+            <div className="flex items-center space-x-3">
+              <span className={`text-sm font-medium ${guilt > 20 ? 'text-white' : 'text-gray-800'}`}>
+                {language === 'tr' ? 'Vicdan' : 'Guilt'}
+              </span>
+              <div className="w-24 h-3 bg-black/20 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-500 ${
+                    guilt > 60 ? 'bg-red-500' : 
+                    guilt > 30 ? 'bg-orange-500' : 
+                    guilt > 10 ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${guilt}%` }}
+                ></div>
+              </div>
+              <span className={`text-sm font-bold ${
+                guilt > 60 ? 'text-red-400' : 
+                guilt > 30 ? 'text-orange-400' : 
+                guilt > 10 ? 'text-yellow-600' : 'text-green-600'
+              }`}>
+                {guilt}%
+              </span>
+            </div>
+
+            <button
+              onClick={saveGame}
+              className={`px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 ${
+                guilt > 20
+                  ? 'bg-blue-900/50 text-white hover:bg-blue-800/50'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              💾 {language === 'tr' ? 'Kaydet' : 'Save'}
+            </button>
+          </div>
+        </div>
+
+        {/* Story Title */}
+        <div className="text-center mb-8">
+          <h1 className={`text-5xl font-black mb-2 ${
+            guilt > 20 ? 'text-white drop-shadow-lg' : 'text-gray-900'
+          }`}>
+            {renderGlitched(currentNode.title[language])}
+          </h1>
+          {guilt > 30 && (
+            <div className="w-32 h-1 bg-red-500 mx-auto animate-pulse"></div>
+          )}
+        </div>
+
+        {/* Story Content */}
+        <div className={`relative mb-8 p-8 rounded-3xl backdrop-blur-lg transition-all duration-500 ${
+          guilt > 40 
+            ? 'bg-black/40 border border-red-900/50 shadow-2xl shadow-red-900/20' :
+          guilt > 20 
+            ? 'bg-black/20 border border-gray-700/50' :
+            'bg-white/90 border border-amber-200/50 shadow-xl'
+        }`}>
+          {guilt > 50 && (
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-red-900/20 to-transparent animate-pulse"></div>
+          )}
+          
+          <div className="relative prose prose-xl max-w-none">
+            <p className={`text-xl leading-relaxed whitespace-pre-line font-light ${
+              guilt > 20 ? 'text-gray-100' : 'text-gray-800'
+            }`}>
+              {renderGlitched(currentNode.text[language])}
+            </p>
+          </div>
+        </div>
+
+        {/* Choices */}
+        {!isEnding && (
+          <div className="space-y-4 mb-8">
+            {currentNode.choices.map((choice, index) => (
+              <button
+                key={choice.id}
+                onClick={() => choose(choice)}
+                className={`group relative w-full text-left p-6 rounded-2xl transition-all duration-300 transform hover:scale-102 hover:-translate-y-1 ${
+                  guilt > 30 
+                    ? 'bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/50 text-white hover:bg-gray-800/60' 
+                    : 'bg-white/95 backdrop-blur-sm border border-amber-300/30 hover:border-amber-400/50 shadow-lg hover:shadow-xl'
+                }`}
+              >
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div className="relative flex items-start space-x-4">
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    guilt > 30 ? 'bg-red-900/50 text-red-200' : 'bg-amber-600 text-white'
+                  }`}>
+                    {String.fromCharCode(65 + index)}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-lg font-medium ${guilt > 30 ? 'text-gray-100' : 'text-gray-900'}`}>
+                      {renderGlitched(choice.text[language])}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 text-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+                    →
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Ending Screen */}
+        {isEnding && (
+          <div className="text-center py-12">
+            <div className={`inline-block p-8 rounded-3xl backdrop-blur-lg border-2 ${
+              guilt > 50 
+                ? 'bg-red-950/50 border-red-500/50 text-red-100' :
+              guilt > 20 
+                ? 'bg-orange-950/50 border-orange-500/50 text-orange-100' :
+              guilt > 0
+                ? 'bg-yellow-950/50 border-yellow-500/50 text-yellow-100' :
+                'bg-green-950/50 border-green-500/50 text-green-100'
+            }`}>
+              <div className="text-3xl font-bold mb-4">
+                {guilt > 50 
+                  ? (language === 'tr' ? '💀 Ağır Suçluluk' : '💀 Heavy Guilt')
+                  : guilt > 20
+                  ? (language === 'tr' ? '😔 Vicdan Azabı' : '😔 Troubled Conscience')
+                  : guilt > 0
+                  ? (language === 'tr' ? '😐 Hafif Pişmanlık' : '😐 Mild Regret')
+                  : (language === 'tr' ? '😌 Temiz Vicdan' : '😌 Clear Conscience')
+                }
+              </div>
+              <p className="text-lg font-light opacity-90">
+                {language === 'tr' 
+                  ? 'Hikayeniz tamamlandı. Seçimlerinizin sonuçlarını yaşadınız.'
+                  : 'Your story is complete. You have lived with the consequences of your choices.'
+                }
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
